@@ -1,3 +1,8 @@
+---
+name: skillcheck
+description: LLM-powered security auditor for Claude Code skills. Analyzes skills for security risks before installation.
+---
+
 # Skillcheck - Security Auditor for Claude Code Skills
 
 Analyze Claude Code skills for security risks before installation.
