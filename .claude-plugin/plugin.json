@@ -1,0 +1,9 @@
+{
+  "name": "skillcheck",
+  "version": "1.0.0",
+  "description": "LLM-powered security auditor for Claude Code skills. Analyzes skills for security risks before installation.",
+  "author": "atbender",
+  "keywords": ["security", "audit", "skills", "safety"],
+  "repository": "https://github.com/atbender/skillcheck",
+  "license": "MIT"
+}

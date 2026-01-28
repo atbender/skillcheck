@@ -1,0 +1,14 @@
+{
+  "hooks": [
+    {
+      "matcher": {
+        "type": "prompt_submit",
+        "pattern": "(?i)(install|add)\\s+(skill|plugin|extension).*github\\.com"
+      },
+      "hook": {
+        "type": "suggest",
+        "message": "Consider running /skillcheck [url] first to audit this skill for security risks before installing."
+      }
+    }
+  ]
+}
