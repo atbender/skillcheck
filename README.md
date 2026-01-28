@@ -41,46 +41,91 @@ Claude Code skills are powerful—they can run commands, read files, and access 
 
 | Severity | Examples |
 |----------|----------|
-| **Critical** | Credential theft (`~/.ssh`, `~/.aws`), remote code execution, data exfiltration |
-| **High** | Requests to unknown domains, writes outside project, background processes |
+| **Critical** | Credential theft (`~/.ssh`, `~/.aws`), remote code execution, data exfiltration, obfuscated code |
+| **High** | Requests to unknown domains, writes outside project, persistence mechanisms, supply chain risks |
 | **Medium** | Broad file permissions, runtime package installs, curl/wget usage |
 | **Low** | Standard permissions appropriate for stated purpose |
 
+## Risk → Verdict Mapping
+
+| Risk Level | Verdict | Meaning |
+|------------|---------|---------|
+| **Low** | `SAFE` | No significant security concerns |
+| **Medium** | `CAUTION` | Minor risks, review before installing |
+| **High** | `REVIEW` | Suspicious patterns, manual inspection needed |
+| **Critical** | `DO NOT INSTALL` | Critical risks identified |
+
 ---
 
-## Example Report
+## Limitations
 
+Skillcheck is a helpful first-pass analysis, but it has limitations:
+
+- **Static analysis only** — Cannot detect runtime behavior or code that changes after installation
+- **Sophisticated obfuscation** — While common encoding is detected, novel obfuscation may bypass checks
+- **False positives** — Legitimate skills may trigger warnings if they genuinely need broad permissions
+- **Context matters** — A shell wrapper skill legitimately needs Bash access; a documentation skill does not
+- **Not a replacement for code review** — Always inspect critical skills manually before installation
+
+When in doubt, read the code yourself or ask the skill author about flagged patterns.
+
+---
+
+## Example Reports
+
+**SAFE** — Clean skill with no concerns:
 ```
-SKILL SECURITY AUDIT REPORT
-═══════════════════════════════════════════════════════════════════════════════
+SKILLCHECK ─ anthropics/docs-helper
+═══════════════════════════════════════════════════════════════
+RISK: LOW
 
-Skill:       sketch-to-code
-Repository:  https://github.com/example/sketch-to-code
-Risk Level:  HIGH
+• No security concerns detected
+• Documentation-only skill with no executable code
 
-───────────────────────────────────────────────────────────────────────────────
-SECURITY FINDINGS
-───────────────────────────────────────────────────────────────────────────────
+VERDICT: SAFE
+═══════════════════════════════════════════════════════════════
+```
 
-[HIGH] External Data Transmission
-  File: SKILL.md:87
-  Code: curl -X POST https://analytics.example.com/collect -d @output.json
-  Risk: Sends generated code to an external server
-  Recommendation: Remove or replace with local-only processing
+**CAUTION** — Minor risks worth noting:
+```
+SKILLCHECK ─ example/api-tester
+═══════════════════════════════════════════════════════════════
+RISK: MEDIUM
 
-[MEDIUM] Broad Bash Permission
-  File: SKILL.md:23
-  Code: Permission: Bash (unrestricted)
-  Risk: Can execute any shell command without limits
-  Recommendation: Scope to specific commands needed
+• Curl usage: Downloads external resources (SKILL.md:34)
+• Environment variables: Reads $API_KEY for authentication (SKILL.md:28)
 
-───────────────────────────────────────────────────────────────────────────────
-RECOMMENDATION
-───────────────────────────────────────────────────────────────────────────────
+VERDICT: CAUTION
+═══════════════════════════════════════════════════════════════
+```
 
-MANUAL REVIEW REQUIRED: High-risk patterns detected. Inspect code manually.
+**REVIEW** — Suspicious patterns need inspection:
+```
+SKILLCHECK ─ example/sketch-to-code
+═══════════════════════════════════════════════════════════════
+RISK: HIGH
 
-═══════════════════════════════════════════════════════════════════════════════
+• External data transmission: POSTs to analytics.example.com (SKILL.md:87)
+• Unrestricted Bash: No command scope limits (SKILL.md:23)
+• Curl usage: Downloads external resources (SKILL.md:45)
+
+VERDICT: REVIEW
+═══════════════════════════════════════════════════════════════
+```
+
+**DO NOT INSTALL** — Critical risks identified:
+```
+SKILLCHECK ─ evil-org/super-helper
+═══════════════════════════════════════════════════════════════
+RISK: CRITICAL
+
+• Credential theft: reads ~/.ssh/*, ~/.aws/* (SKILL.md:39-46)
+• Exfiltration: POSTs data to external server (SKILL.md:58)
+• Remote code exec: curl | bash pattern (SKILL.md:27)
+• Persistence: modifies .bashrc + crontab (SKILL.md:75-76)
+
+VERDICT: DO NOT INSTALL
+═══════════════════════════════════════════════════════════════
 ```
 
 ---
@@ -101,6 +146,32 @@ MANUAL REVIEW REQUIRED: High-risk patterns detected. Inspect code manually.
 2. **Fetch** — Uses `gh` CLI to pull skill files (handles auth + private repos)
 3. **Analyze** — Claude examines code for malicious patterns and risky permissions
 4. **Report** — Structured output with findings, severity, and recommendations
+
+---
+
+## Troubleshooting
+
+**"Error: Repository not found"**
+- Check the URL is correct and the repo exists
+- For private repos, authenticate with `gh auth login`
+
+**"Error: GitHub API rate limit exceeded"**
+- Authenticate with `gh auth login` for higher rate limits
+- Wait a few minutes and try again
+
+**"Warning: No SKILL.md or plugin.json found"**
+- The repo may not be a Claude Code skill
+- Check if skill files are in a subdirectory (e.g., `skills/*/SKILL.md`)
+
+**"gh: command not found"**
+- Install the GitHub CLI: https://cli.github.com/
+- macOS: `brew install gh`
+- Then authenticate: `gh auth login`
+
+**False positive on a legitimate skill?**
+- Check if the flagged pattern is justified for the skill's purpose
+- A shell wrapper legitimately needs Bash; a docs skill does not
+- Report false positives via GitHub issues
 
 ---
 
