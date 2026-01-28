@@ -87,54 +87,59 @@ Examine all fetched content for these security concerns:
 
 ### Step 4: Generate Security Report
 
-Output your findings in this exact format:
+Output a concise report in this exact format (4-5 key findings max):
 
 ```
-SKILL SECURITY AUDIT REPORT
-═══════════════════════════════════════════════════════════════════════════════
+SKILLCHECK ─ {owner}/{repo}
+═══════════════════════════════════════════════════════════════
+RISK: {LOW | MEDIUM | HIGH | CRITICAL}
 
-Skill:       {skill-name}
-Repository:  {full-github-url}
-Risk Level:  {LOW | MEDIUM | HIGH | CRITICAL}
+{If findings exist, list 3-5 bullet points with the most critical issues:}
+• {Issue}: {brief description} ({file}:{line})
+• {Issue}: {brief description} ({file}:{line})
+• {Issue}: {brief description} ({file}:{line})
 
-───────────────────────────────────────────────────────────────────────────────
-OVERVIEW
-───────────────────────────────────────────────────────────────────────────────
-{Brief description of what this skill does based on its documentation}
+{If no issues:}
+• No security concerns detected
 
-───────────────────────────────────────────────────────────────────────────────
-PERMISSIONS REQUESTED
-───────────────────────────────────────────────────────────────────────────────
-Permission          Scope                           Risk
-─────────────────────────────────────────────────────────────────────────────
-{permission}        {what it accesses}              {LOW|MEDIUM|HIGH|CRITICAL}
-...
+VERDICT: {SAFE | CAUTION | REVIEW | DO NOT INSTALL}
+═══════════════════════════════════════════════════════════════
+```
 
-───────────────────────────────────────────────────────────────────────────────
-SECURITY FINDINGS
-───────────────────────────────────────────────────────────────────────────────
+**Verdict meanings:**
+- `SAFE` - No significant security concerns
+- `CAUTION` - Minor risks, review before installing
+- `REVIEW` - Suspicious patterns, manual inspection needed
+- `DO NOT INSTALL` - Critical risks identified
 
-[{SEVERITY}] {Finding Title}
-  File: {path/to/file}:{line-number}
-  Code: {relevant code snippet}
-  Risk: {explanation of the security concern}
-  Recommendation: {what to do about it}
+**Example outputs:**
 
-...
+Safe skill:
+```
+SKILLCHECK ─ anthropics/skills
+═══════════════════════════════════════════════════════════════
+RISK: LOW
 
-───────────────────────────────────────────────────────────────────────────────
-RECOMMENDATION
-───────────────────────────────────────────────────────────────────────────────
+• No security concerns detected
+• Documentation-only skill with no executable code
 
-{One of:}
-- SAFE TO INSTALL: No significant security concerns found.
-- INSTALL WITH CAUTION: Review the noted risks before proceeding.
-- MANUAL REVIEW REQUIRED: High-risk patterns detected. Inspect code manually.
-- DO NOT INSTALL: Critical security risks identified.
+VERDICT: SAFE
+═══════════════════════════════════════════════════════════════
+```
 
-{Additional context or specific warnings}
+Malicious skill:
+```
+SKILLCHECK ─ evil-org/super-helper
+═══════════════════════════════════════════════════════════════
+RISK: CRITICAL
 
-═══════════════════════════════════════════════════════════════════════════════
+• Credential theft: reads ~/.ssh/*, ~/.aws/* (SKILL.md:39-46)
+• Exfiltration: POSTs data to external server (SKILL.md:58)
+• Remote code exec: curl | bash pattern (SKILL.md:27)
+• Persistence: modifies .bashrc + crontab (SKILL.md:75-76)
+
+VERDICT: DO NOT INSTALL
+═══════════════════════════════════════════════════════════════
 ```
 
 ### Error Handling
